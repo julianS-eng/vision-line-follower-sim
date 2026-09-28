@@ -142,7 +142,7 @@ def render_track(track: Track, config: TrackRenderConfig) -> WorldImage:
     base[:] = config.floor_color
     noise = rng.normal(scale=config.texture_noise_std, size=(height_px, width_px, 1))
     base = np.clip(base.astype(np.float32) + noise, 0, 255).astype(np.uint8)
-    base = cv2.GaussianBlur(base, (0, 0), sigmaX=1.0)
+    base = cv2.GaussianBlur(base, (0, 0), sigmaX=1.0).astype(np.uint8)
     base = _draw_lighting_gradient(base, config.lighting_strength, rng)
 
     affine = world_img.world_to_pixel_affine()

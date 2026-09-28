@@ -154,9 +154,11 @@ def _write_gif(frames: list[np.ndarray], output_path: Path, cfg: GifExportConfig
     """Encode frames as a paletted, optimized GIF (keeps file size well under
     what an unquantized per-frame-palette encoder would produce)."""
     pil_frames = [Image.fromarray(f) for f in frames]
-    shared_palette = pil_frames[0].quantize(colors=cfg.palette_colors, method=Image.MEDIANCUT)
+    shared_palette = pil_frames[0].quantize(
+        colors=cfg.palette_colors, method=Image.Quantize.MEDIANCUT
+    )
     quantized = [
-        frame.quantize(colors=cfg.palette_colors, palette=shared_palette, dither=Image.NONE)
+        frame.quantize(colors=cfg.palette_colors, palette=shared_palette, dither=Image.Dither.NONE)
         for frame in pil_frames
     ]
     duration_ms = round(1000 / cfg.fps)
