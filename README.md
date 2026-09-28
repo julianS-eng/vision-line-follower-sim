@@ -1,6 +1,6 @@
 # Vision Line Follower
 
-[![CI](https://github.com/julians-eng/vision-line-follower-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/julians-eng/vision-line-follower-sim/actions/workflows/ci.yml)
+[![CI](https://github.com/julianS-eng/vision-line-follower-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/julianS-eng/vision-line-follower-sim/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
