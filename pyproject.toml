@@ -30,7 +30,7 @@ dependencies = [
     "opencv-python-headless>=4.9,<5.0",
     "scipy>=1.11",
     "matplotlib>=3.8",
-    "imageio>=2.34",
+    "pillow>=10.0",
 ]
 
 [project.optional-dependencies]

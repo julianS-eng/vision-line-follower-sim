@@ -51,10 +51,10 @@ def main() -> None:
 
     track = generate_track(TrackSpec(name=args.track, seed=args.seed, num_crossings=1))
     render_config = TrackRenderConfig(
-        lighting_strength=0.3, occlusion_level=0.15, texture_noise_std=7.0, seed=1
+        lighting_strength=0.25, occlusion_level=0.1, texture_noise_std=3.0, seed=1
     )
     world = render_track(track, render_config)
-    camera = CameraModel(CameraConfig(pixel_noise_std=3.0))
+    camera = CameraModel(CameraConfig(pixel_noise_std=1.5))
     pipeline = VisionPipeline(camera)
     controller = _CONTROLLERS[args.controller]()
     sim_config = SimulationConfig(max_steps=2500, camera_seed=7, robot_seed=7)
@@ -99,7 +99,7 @@ def main() -> None:
         cross_track_errors,
         args.controller,
         out_path,
-        GifExportConfig(fps=15, max_frames=220),
+        GifExportConfig(),
     )
     size_mb = out_path.stat().st_size / (1024 * 1024)
     print(f"Wrote {out_path} ({size_mb:.2f} MB)")

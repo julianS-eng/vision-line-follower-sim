@@ -241,18 +241,29 @@ pipeline de visión que subestima su propio error.
 Documentadas explícitamente, en vez de omitidas en silencio, como pide el alcance
 del proyecto:
 
-- **Pure Pursuit en la autointersección de la figura en 8.** En al menos una
-  semilla del benchmark (`figure_eight`, seed 5), Pure Pursuit pierde la línea
-  justo en el cruce central: el error de rumbo estimado se acerca a ±90° durante
-  varios fotogramas seguidos (el robot gira sobre sí mismo con muy poca velocidad
-  de avance) y, aunque se recortó la extrapolación de Taylor para evitar el
-  desborde numérico de la tangente, la ley de control geométrica sigue sin generar
-  suficiente curvatura de giro para converger a tiempo antes de que la línea salga
-  del campo de visión. Es una limitación conocida de Pure Pursuit frente a curvas
-  muy cerradas combinadas con velocidad mínima baja, no un error de implementación
-  oculto — y precisamente el tipo de hallazgo que un benchmark honesto debe sacar a
-  la luz. Trabajo futuro: *lookahead* adaptativo por curvatura más agresivo, o
-  pasar la trayectoria completa (no solo el punto de evaluación) al controlador.
+- **Pure Pursuit en la autointersección de la figura en 8.** En el benchmark
+  completo (ver `docs/benchmark_summary.csv`), Pure Pursuit completa el óvalo y
+  el bucle curvo de forma perfecta (100 % de éxito en las semillas evaluadas)
+  pero solo el 58-67 % de las corridas en la pista de figura en 8, y casi todos
+  los fallos ocurren en el cruce central: el error de rumbo estimado se acerca a
+  ±90° durante varios fotogramas seguidos (el robot gira sobre sí mismo con muy
+  poca velocidad de avance) y la ley de control geométrica no genera suficiente
+  curvatura de giro para converger a tiempo antes de que la línea salga del
+  campo de visión. Se intentó mitigar de varias formas: recorte de la
+  extrapolación de Taylor para evitar el desborde numérico de la tangente,
+  anclaje temporal de la ventana deslizante, y un término de reducción de
+  *lookahead* proporcional a la curvatura — este último sí ayuda en el cruce de
+  la figura en 8 (ver `PurePursuitConfig.lookahead_curvature_gain`), pero un
+  valor de ganancia lo bastante alto para arreglar ese cruce **rompe** el cierre
+  de vuelta del óvalo y del bucle curvo (el robot se sale de pista justo antes
+  de completar la vuelta, alrededor del 95 % de recorrido), así que se descartó
+  y se mantuvo la ganancia en 0. Es una limitación conocida de Pure Pursuit
+  frente a curvas muy cerradas combinadas con velocidad mínima baja, no un error
+  de implementación oculto — y precisamente el tipo de hallazgo que un benchmark
+  honesto debe sacar a la luz en vez de ocultar ajustando el banco de pruebas.
+  Trabajo futuro: *lookahead* adaptativo específico por tramo de pista (no solo
+  por curvatura puntual), o pasar la trayectoria completa (no solo el punto de
+  evaluación) al controlador.
 - **Extrapolación local para Pure Pursuit.** El modelo cuadrático reconstruido por
   Taylor solo es fiel cerca del punto donde el pipeline evalúa el error; para
   *lookahead* distances mucho mayores que el ROI de visión, la extrapolación pierde

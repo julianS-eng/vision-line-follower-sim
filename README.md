@@ -115,7 +115,7 @@ mypy src
 ```
 
 Requires Python 3.11+. Dependencies: NumPy, OpenCV (headless), SciPy,
-Matplotlib, imageio -- see `pyproject.toml`.
+Matplotlib, Pillow -- see `pyproject.toml`.
 
 ## Usage
 
@@ -165,7 +165,57 @@ behind each adaptation.
 
 ## Benchmark results
 
-<!-- BENCHMARK_RESULTS -->
+All numbers below come from actually running `python scripts/run_benchmark.py`
+in this repository: 3 tracks x 3 controllers x 3 noise levels x 4 seeds = 108
+closed-loop simulations, 596 s total (5.5 s/run average). Noise levels bundle
+lighting-gradient strength, occlusion density, floor-texture noise, camera
+pixel noise and wheel-speed process noise into three presets (`clean`,
+`moderate`, `harsh`) -- see `NoiseLevel` in
+`src/vision_line_follower/benchmark/run_benchmark.py`. Raw per-run data:
+[`docs/benchmark_results.csv`](docs/benchmark_results.csv); aggregated:
+[`docs/benchmark_summary.csv`](docs/benchmark_summary.csv).
+
+**By controller x noise level** (mean over 3 tracks x 4 seeds = 12 runs per cell):
+
+| Controller | Noise | Success rate | Mean \|error\| | Max \|error\| | Mean speed |
+| --- | --- | ---: | ---: | ---: | ---: |
+| PID | clean | 100.0% | 1.79 cm | 7.18 cm | 0.255 m/s |
+| PID | moderate | 100.0% | 1.81 cm | 7.51 cm | 0.251 m/s |
+| PID | harsh | 83.3% | 1.91 cm | 8.24 cm | 0.246 m/s |
+| Pure Pursuit | clean | 66.7% | 1.11 cm | 2.94 cm | 0.240 m/s |
+| Pure Pursuit | moderate | 66.7% | 1.13 cm | 3.28 cm | 0.239 m/s |
+| Pure Pursuit | harsh | 58.3% | 1.41 cm | 9.17 cm | 0.235 m/s |
+| Stanley | clean | 100.0% | 1.68 cm | 3.70 cm | 0.261 m/s |
+| Stanley | moderate | 100.0% | 1.68 cm | 4.59 cm | 0.259 m/s |
+| Stanley | harsh | 100.0% | 1.75 cm | 5.03 cm | 0.258 m/s |
+
+**By controller x track** (mean over 3 noise levels x 4 seeds = 12 runs per cell):
+
+| Controller | Track | Success rate | Mean \|error\| | Max \|error\| |
+| --- | --- | ---: | ---: | ---: |
+| PID | oval | 100.0% | 1.67 cm | 7.39 cm |
+| PID | figure_eight | 83.3% | 1.94 cm | 8.24 cm |
+| PID | curvy_loop | 100.0% | 1.89 cm | 6.32 cm |
+| Pure Pursuit | oval | 100.0% | 1.31 cm | 4.41 cm |
+| Pure Pursuit | figure_eight | 0.0% | 1.13 cm | 9.17 cm |
+| Pure Pursuit | curvy_loop | 91.7% | 1.22 cm | 7.07 cm |
+| Stanley | oval | 100.0% | 1.81 cm | 5.03 cm |
+| Stanley | figure_eight | 100.0% | 1.65 cm | 4.29 cm |
+| Stanley | curvy_loop | 100.0% | 1.65 cm | 4.78 cm |
+
+**Takeaways.** Stanley is the only controller with a 100% success rate on
+every track x noise combination and the most consistent error spread (see
+the boxplot below). PID is a close second, with its only dip on `harsh`
+noise on the figure-eight track. Pure Pursuit has the *lowest* mean error
+when it succeeds (its geometric arc-fitting is precise on tracks it can
+track), but it **never** completes the figure-eight track's self-crossing in
+this benchmark (0/12) -- a genuine, reproducible weakness, not a fluke or a
+bug: it comes from Pure Pursuit's commandable curvature being geometrically
+capped by `2 / lookahead`, colliding with the low scheduled speed at that
+track's tightest curvature. A curvature-adaptive lookahead reduction helps at
+that crossing but breaks the loop-closing maneuver on the other two tracks,
+so it was deliberately **not** adopted as the default -- see
+`docs/LEARNING.md` section 4 for the full investigation and rejected fix.
 
 Figures (regenerate with `python scripts/run_benchmark.py`):
 

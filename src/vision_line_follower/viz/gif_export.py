@@ -8,8 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import cv2
-import imageio.v2 as imageio
 import numpy as np
+from PIL import Image
 
 from vision_line_follower.geometry import Pose
 from vision_line_follower.track.generator import Track
@@ -29,13 +29,17 @@ class GifExportConfig:
         inset_scale: Scale factor applied to the camera frame before it is
             pasted into the map panel as a picture-in-picture inset.
         trail_length: Number of recent robot positions drawn as a trail.
+        palette_colors: Number of colors in the shared adaptive palette used
+            to encode the GIF; this (plus ``max_frames`` and ``map_size``) is
+            the main lever for keeping the output file under the size budget.
     """
 
-    fps: int = 15
-    max_frames: int = 220
-    map_size: tuple[int, int] = (480, 380)
-    inset_scale: float = 1.4
-    trail_length: int = 260
+    fps: int = 12
+    max_frames: int = 110
+    map_size: tuple[int, int] = (420, 340)
+    inset_scale: float = 0.85
+    trail_length: int = 200
+    palette_colors: int = 64
 
 
 def _world_panel(world: WorldImage, map_size: tuple[int, int]) -> tuple[np.ndarray, np.ndarray]:
@@ -143,4 +147,25 @@ def export_run_gif(
         frames_out.append(cv2.cvtColor(panel, cv2.COLOR_BGR2RGB))
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    imageio.mimsave(output_path, frames_out, fps=cfg.fps, loop=0)
+    _write_gif(frames_out, output_path, cfg)
+
+
+def _write_gif(frames: list[np.ndarray], output_path: Path, cfg: GifExportConfig) -> None:
+    """Encode frames as a paletted, optimized GIF (keeps file size well under
+    what an unquantized per-frame-palette encoder would produce)."""
+    pil_frames = [Image.fromarray(f) for f in frames]
+    shared_palette = pil_frames[0].quantize(colors=cfg.palette_colors, method=Image.MEDIANCUT)
+    quantized = [
+        frame.quantize(colors=cfg.palette_colors, palette=shared_palette, dither=Image.NONE)
+        for frame in pil_frames
+    ]
+    duration_ms = round(1000 / cfg.fps)
+    quantized[0].save(
+        output_path,
+        save_all=True,
+        append_images=quantized[1:],
+        duration=duration_ms,
+        loop=0,
+        optimize=True,
+        disposal=2,
+    )
