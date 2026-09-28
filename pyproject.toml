@@ -56,7 +56,10 @@ ignore = ["N806"]
 "tests/*" = ["N802"]
 
 [tool.mypy]
-python_version = "3.11"
+# No pinned python_version: let mypy infer it from the interpreter that
+# runs it, so CI's 3.11/3.12 matrix each check stubs (e.g. numpy's, which
+# use 3.12-only "type" statement syntax) against their own version instead
+# of a fixed target that breaks the 3.12 leg.
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
